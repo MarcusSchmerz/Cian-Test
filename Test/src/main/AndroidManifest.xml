@@ -1,14 +1,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.cian.test">
 
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:icon="@drawable/icon"
-        android:label="@string/app_name"
+        android:label="@string/App"
         android:theme="@style/AppTheme">
         <activity
             android:name="ru.cian.test.MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/App">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

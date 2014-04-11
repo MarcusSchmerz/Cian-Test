@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Cian</string>
+    <string name="App">Cian</string>
+    <string name="Login">Авторизация</string>
 </resources>
