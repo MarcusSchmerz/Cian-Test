@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:menu="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/ExitMenu"
-        android:title="@string/Exit"
+        android:id="@+id/exitMenu"
+        android:title="@string/exit"
         menu:showAsAction="always" />
 </menu>

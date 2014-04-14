@@ -1,10 +1,10 @@
 package ru.cian.test.api;
 
-import ru.cian.test.api.requests.Authorization;
+import ru.cian.test.api.requests.GetNews;
 
 public class Api extends ServerApi {
-    public String authorization(String login, String password) throws ApiException, ServerApiException {
-        Authorization authorization = new Authorization(login, password);
-        return load(authorization);
+    public String getNews(String login, String password) throws ApiException, ServerApiException {
+        GetNews getNews = new GetNews(login, password);
+        return load(getNews);
     }
 }

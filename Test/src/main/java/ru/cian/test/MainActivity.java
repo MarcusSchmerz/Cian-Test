@@ -29,35 +29,20 @@ public class MainActivity extends ActionBarActivity {
     private static final String URL_LOGOUT = "https://oauth.vk.com/logout";
     private static final String USER_ID = "USER_ID";
 
-    private Dialog dialog = null;
     private SharedPreferences sharedPreferences = null;
+    private String accessToken = null;
+    private String userId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //
-        //
-        //
-        /*ExecutorService executorService = Executors.newFixedThreadPool(2);
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                Api api = new Api();
-                try {
-                    api.authorization("", "");
-                } catch (ApiException e) {
-                    e.printStackTrace();
-                } catch (ServerApiException e) {
-                    e.printStackTrace();
-                }
-            }
-        });*/
-        //
-        //
-        //
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-        login();
+        accessToken = sharedPreferences.getString(ACCESS_TOKEN, null);
+        userId = sharedPreferences.getString(USER_ID, null);
+        if (accessToken == null || userId == null) {
+            login();
+        }
     }
 
     @Override
@@ -67,34 +52,11 @@ public class MainActivity extends ActionBarActivity {
         return true;
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.ExitMenu:
-                dialog = new Dialog(MainActivity.this);
-                dialog.setContentView(R.layout.dialog_login);
-                dialog.setTitle(R.string.Exit);
-                dialog.show();
-                final WebView logoutWebView = (WebView) dialog.findViewById(R.id.LoginWebView);
-                WebSettings webSettings = logoutWebView.getSettings();
-                webSettings.setJavaScriptEnabled(true);
-                logoutWebView.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                        super.onPageStarted(view, url, favicon);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.remove(ACCESS_TOKEN);
-                        editor.remove(USER_ID);
-                        editor.commit();
-                        dialog.dismiss();
-                        login();
-                    }
-                });
-                CookieSyncManager.createInstance(MainActivity.this);
-                CookieManager cookieManager = CookieManager.getInstance();
-                cookieManager.removeAllCookie();
-                logoutWebView.loadUrl(URL_LOGOUT);
+            case R.id.exitMenu:
+                logout();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -102,55 +64,75 @@ public class MainActivity extends ActionBarActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void login() {
-        String accessToken = sharedPreferences.getString(ACCESS_TOKEN, null);
-        String userId = sharedPreferences.getString(USER_ID, null);
-        if (accessToken == null || userId == null) {
-            dialog = new Dialog(MainActivity.this);
-            dialog.setContentView(R.layout.dialog_login);
-            dialog.setTitle(R.string.Login);
-            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    finish();
-                }
-            });
-            dialog.show();
-            WebView loginWebView = (WebView) dialog.findViewById(R.id.LoginWebView);
-            WebSettings webSettings = loginWebView.getSettings();
-            webSettings.setJavaScriptEnabled(true);
-            loginWebView.setWebViewClient(new WebViewClient() {
-                @Override
-                public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                    super.onPageStarted(view, url, favicon);
-                    if (url.startsWith(REDIRECT_URL)) {
-                        if (url.contains("error=")) {
-                            finish();
-                        } else {
-                            String accessToken = extract(url, "access_token=(.*?)&");
-                            String userId = extract(url, "user_id=(\\d*)");
-                            Log.e("DATA", "ACCESS_TOKEN: " + accessToken);
-                            Log.e("DATA", "USER_ID: " + userId);
-                            if (accessToken != null && userId != null) {
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString(ACCESS_TOKEN, accessToken);
-                                editor.putString(USER_ID, userId);
-                                editor.commit();
-                            }
+        final Dialog loginDialog = new Dialog(MainActivity.this);
+        loginDialog.setContentView(R.layout.dialog_login);
+        loginDialog.setTitle(R.string.login);
+        loginDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                finish();
+            }
+        });
+        loginDialog.show();
+        WebView loginWebView = (WebView) loginDialog.findViewById(R.id.loginWebView);
+        WebSettings webSettings = loginWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        loginWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                if (url.startsWith(REDIRECT_URL)) {
+                    if (url.contains("access_token=") && url.contains("user_id=")) {
+                        String accessToken = extract(url, "access_token=(.*?)&");
+                        String userId = extract(url, "user_id=(\\d*)");
+                        Log.e("DATA", "ACCESS_TOKEN: " + accessToken);
+                        Log.e("DATA", "USER_ID: " + userId);
+                        if (accessToken != null && userId != null) {
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(ACCESS_TOKEN, accessToken);
+                            editor.putString(USER_ID, userId);
+                            editor.commit();
                         }
-                        dialog.dismiss();
+                        loginDialog.dismiss();
+                    } else {
+                        finish();
                     }
                 }
+            }
 
-                private String extract(String url, String key) {
-                    Pattern pattern = Pattern.compile(key);
-                    Matcher matcher = pattern.matcher(url);
-                    if (!matcher.find()) {
-                        return null;
-                    }
-                    return matcher.toMatchResult().group(1);
+            private String extract(String url, String key) {
+                Pattern pattern = Pattern.compile(key);
+                Matcher matcher = pattern.matcher(url);
+                if (!matcher.find()) {
+                    return null;
                 }
-            });
-            loginWebView.loadUrl(URL_AUTHORIZATION + "?client_id=" + ID + "&scope=" + "wall,photos" + "&response_type=token");
-        }
+                return matcher.toMatchResult().group(1);
+            }
+        });
+        loginWebView.loadUrl(URL_AUTHORIZATION + "?client_id=" + ID + "&scope=" + "friends,wall,photos" + "&response_type=token");
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private void logout() {
+        Dialog dialog = new Dialog(MainActivity.this);
+        dialog.setContentView(R.layout.dialog_login);
+        WebView logoutWebView = (WebView) dialog.findViewById(R.id.loginWebView);
+        WebSettings webSettings = logoutWebView.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        logoutWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.remove(ACCESS_TOKEN);
+                editor.remove(USER_ID);
+                editor.commit();
+                login();
+            }
+        });
+        CookieSyncManager.createInstance(MainActivity.this);
+        CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.removeAllCookie();
+        logoutWebView.loadUrl(URL_LOGOUT);
     }
 }

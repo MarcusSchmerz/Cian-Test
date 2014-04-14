@@ -3,13 +3,14 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <application
+        android:name="ru.cian.test.App"
         android:allowBackup="true"
         android:icon="@drawable/icon"
-        android:label="@string/App"
-        android:theme="@style/AppTheme">
+        android:label="@string/app"
+        android:theme="@style/appTheme">
         <activity
             android:name="ru.cian.test.MainActivity"
-            android:label="@string/App">
+            android:label="@string/app">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

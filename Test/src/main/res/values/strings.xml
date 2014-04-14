@@ -1,5 +1,5 @@
 <resources>
-    <string name="App">Cian Test</string>
-    <string name="Exit">Выход</string>
-    <string name="Login">Авторизация</string>
+    <string name="app">Cian Test</string>
+    <string name="exit">Выход</string>
+    <string name="login">Авторизация</string>
 </resources>
